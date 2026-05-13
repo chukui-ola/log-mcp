@@ -1,0 +1,49 @@
+{
+  "max_bytes_per_response": 65536,
+  "default_limit": 100,
+  "hosts": [
+    {
+      "id": "local",
+      "type": "local"
+    },
+    {
+      "id": "test-a",
+      "type": "ssh",
+      "ssh_target": "deploy@test-a.example.com",
+      "ssh_options": ["-o", "BatchMode=yes", "-o", "ConnectTimeout=5"]
+    }
+  ],
+  "sources": [
+    {
+      "id": "nginx_error_a",
+      "host": "test-a",
+      "name": "test-a nginx error",
+      "path": "/var/log/nginx/error.log"
+    },
+    {
+      "id": "php_error_a",
+      "host": "test-a",
+      "name": "test-a php error",
+      "path": "/var/log/php-fpm/error.log"
+    },
+    {
+      "id": "supervisor_a",
+      "host": "test-a",
+      "name": "test-a supervisor logs",
+      "path_glob": "/var/log/supervisor/*.log"
+    },
+    {
+      "id": "local_app",
+      "host": "local",
+      "name": "local app logs",
+      "path_glob": "/tmp/app/*.log"
+    }
+  ],
+  "redact_patterns": [
+    "(?i)(authorization:\\s*bearer\\s+)[^\\s]+",
+    "(?i)(password=)[^&\\s]+",
+    "(?i)(token=)[^&\\s]+",
+    "(?i)(secret=)[^&\\s]+",
+    "(?i)(cookie:\\s*)[^\\n]+"
+  ]
+}
