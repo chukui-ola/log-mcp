@@ -22,21 +22,37 @@ pipeline {
       }
     }
 
+    stage('Setup Go') {
+      steps {
+        sh '''
+          export PATH=$PATH:/var/data/go/1.24.3/go/bin
+          go env -w GOPROXY=https://goproxy.cn,direct
+        '''
+      }
+    }
+
     stage('Go Version') {
       steps {
-        sh 'go version'
+        sh '''
+          export PATH=$PATH:/var/data/go/1.24.3/go/bin
+          go version
+        '''
       }
     }
 
     stage('Test') {
       steps {
-        sh 'go test ./...'
+        sh '''
+          export PATH=$PATH:/var/data/go/1.24.3/go/bin
+          go test ./...
+        '''
       }
     }
 
     stage('Build') {
       steps {
         sh '''
+          export PATH=$PATH:/var/data/go/1.24.3/go/bin
           mkdir -p dist
           go build -ldflags="-s -w" -o dist/log-mcp ./cmd/log-mcp
           cp config.example.json dist/config.example.json
@@ -49,6 +65,7 @@ pipeline {
     stage('Smoke Test') {
       steps {
         sh '''
+          export PATH=$PATH:/var/data/go/1.24.3/go/bin
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
             '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
