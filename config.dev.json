@@ -1,0 +1,27 @@
+{
+  "max_bytes_per_response": 65536,
+  "default_limit": 100,
+  "hosts": [
+    {
+      "id": "dev-192-168-1-27",
+      "type": "ssh",
+      "ssh_target": "ecs-user@192.168.1.27",
+      "ssh_options": ["-o", "BatchMode=yes", "-o", "ConnectTimeout=5"]
+    }
+  ],
+  "sources": [
+    {
+      "id": "dev_supervisor",
+      "host": "dev-192-168-1-27",
+      "name": "dev 192.168.1.27 supervisor logs",
+      "path_glob": "/home/ecs-user/log/supervisord/*.log"
+    }
+  ],
+  "redact_patterns": [
+    "(?i)(authorization:\\s*bearer\\s+)[^\\s]+",
+    "(?i)(password=)[^&\\s]+",
+    "(?i)(token=)[^&\\s]+",
+    "(?i)(secret=)[^&\\s]+",
+    "(?i)(cookie:\\s*)[^\\n]+"
+  ]
+}
