@@ -9,7 +9,9 @@ pipeline {
 
   environment {
     CGO_ENABLED = '0'
+    GOPROXY = 'https://goproxy.cn,direct'
     GOFLAGS = '-trimpath'
+    PATH = "/var/data/go/1.24.3/go/bin:${env.PATH}"
     DEPLOY_DIR = '/var/www/slp/log-mcp'
     SUPERVISOR_CONF = '/etc/supervisor/conf.d/log-mcp.conf'
     SERVICE_NAME = 'log-mcp'
@@ -25,34 +27,27 @@ pipeline {
     stage('Setup Go') {
       steps {
         sh '''
-          export PATH=$PATH:/var/data/go/1.24.3/go/bin
           go env -w GOPROXY=https://goproxy.cn,direct
+          go env GOPROXY
         '''
       }
     }
 
     stage('Go Version') {
       steps {
-        sh '''
-          export PATH=$PATH:/var/data/go/1.24.3/go/bin
-          go version
-        '''
+        sh 'go version'
       }
     }
 
     stage('Test') {
       steps {
-        sh '''
-          export PATH=$PATH:/var/data/go/1.24.3/go/bin
-          go test ./...
-        '''
+        sh 'go test ./...'
       }
     }
 
     stage('Build') {
       steps {
         sh '''
-          export PATH=$PATH:/var/data/go/1.24.3/go/bin
           mkdir -p dist
           go build -ldflags="-s -w" -o dist/log-mcp ./cmd/log-mcp
           cp config.example.json dist/config.example.json
@@ -65,7 +60,6 @@ pipeline {
     stage('Smoke Test') {
       steps {
         sh '''
-          export PATH=$PATH:/var/data/go/1.24.3/go/bin
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
             '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
