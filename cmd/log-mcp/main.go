@@ -281,6 +281,13 @@ func (s Server) tools() []map[string]any {
 			}, []string{"source"}),
 		},
 		{
+			"name":        "list_log_files",
+			"description": "List concrete files matched by one configured log source.",
+			"inputSchema": schema("object", map[string]any{
+				"source": map[string]any{"type": "string"},
+			}, []string{"source"}),
+		},
+		{
 			"name":        "search_log",
 			"description": "Search one configured log source using a regular expression.",
 			"inputSchema": schema("object", map[string]any{
@@ -338,6 +345,15 @@ func (s Server) callTool(name string, args json.RawMessage) (toolResult, error) 
 			in.Lines = s.cfg.DefaultLimit
 		}
 		out, err := s.tailLog(in.Source, clamp(in.Lines, 1, 500))
+		return s.textResult(out), err
+	case "list_log_files":
+		var in struct {
+			Source string `json:"source"`
+		}
+		if err := decodeArgs(args, &in); err != nil {
+			return toolResult{}, err
+		}
+		out, err := s.listLogFiles(in.Source)
 		return s.textResult(out), err
 	case "search_log":
 		var in struct {
@@ -434,10 +450,28 @@ func (s Server) listSources() string {
 	return string(data)
 }
 
+func (s Server) listLogFiles(sourceID string) (string, error) {
+	src, host, err := s.sourceAndHost(sourceID)
+	if err != nil {
+		return "", err
+	}
+	files, err := s.resolveFiles(src, host)
+	if err != nil {
+		return "", err
+	}
+	if len(files) == 0 {
+		return "[no files]\n", nil
+	}
+	return strings.Join(files, "\n") + "\n", nil
+}
+
 func (s Server) tailLog(sourceID string, lines int) (string, error) {
 	src, host, err := s.sourceAndHost(sourceID)
 	if err != nil {
 		return "", err
+	}
+	if host.Type == "ssh" && src.PathGlob != "" {
+		return s.tailRemoteGlob(src, host, lines)
 	}
 	files, err := s.resolveFiles(src, host)
 	if err != nil {
@@ -459,6 +493,9 @@ func (s Server) searchLog(sourceID, pattern string, contextLines, limit int) (st
 	if err != nil {
 		return "", err
 	}
+	if host.Type == "ssh" && src.PathGlob != "" {
+		return s.searchRemoteGlob(src, host, pattern, contextLines, limit)
+	}
 	files, err := s.resolveFiles(src, host)
 	if err != nil {
 		return "", err
@@ -470,6 +507,41 @@ func (s Server) searchLog(sourceID, pattern string, contextLines, limit int) (st
 		writeSection(&b, src.ID, file, out, ignoreNoMatch(err))
 	}
 	return b.String(), nil
+}
+
+func (s Server) tailRemoteGlob(src LogSource, host Host, lines int) (string, error) {
+	script := fmt.Sprintf(
+		"for f in %s; do [ -f \"$f\" ] || continue; printf '## %s %%s\\n' \"$f\"; tail -n %d \"$f\"; printf '\\n'; done",
+		src.PathGlob,
+		src.ID,
+		lines,
+	)
+	out, err := s.run(host, "sh", []string{"-lc", script})
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(out) == "" {
+		return "[no files]\n", nil
+	}
+	return out, nil
+}
+
+func (s Server) searchRemoteGlob(src LogSource, host Host, pattern string, contextLines, limit int) (string, error) {
+	script := fmt.Sprintf(
+		"rg --line-number --no-heading --color never --context %d --max-count %d -- %s %s; code=$?; [ $code -eq 0 ] || [ $code -eq 1 ]",
+		contextLines,
+		limit,
+		shellQuote(pattern),
+		src.PathGlob,
+	)
+	out, err := s.run(host, "sh", []string{"-lc", script})
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(out) == "" {
+		return "[no matches]\n", nil
+	}
+	return out, nil
 }
 
 func (s Server) searchAllLogs(pattern string, contextLines, limitPerSource int) (string, error) {
