@@ -57,6 +57,8 @@ The Jenkins service user must have non-interactive sudo permission for the deplo
 deploy/sudoers/log-mcp-jenkins
 ```
 
+The supervisor `user` in `deploy/supervisor/log-mcp.conf` must exist on the deployment host and must have permission to read local logs or use SSH keys for remote logs.
+
 ## Tools
 
 - `list_log_sources`: list configured log sources and hosts.
