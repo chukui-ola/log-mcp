@@ -14,13 +14,38 @@
         "-o", "PreferredAuthentications=publickey",
         "-o", "StrictHostKeyChecking=no"
       ]
+    },
+    {
+      "id": "dev-192-168-1-28",
+      "type": "ssh",
+      "ssh_target": "jenkins@192.168.1.28",
+      "ssh_options": [
+        "-o", "BatchMode=yes",
+        "-o", "ConnectTimeout=5",
+        "-o", "ConnectionAttempts=1",
+        "-o", "NumberOfPasswordPrompts=0",
+        "-o", "PreferredAuthentications=publickey",
+        "-o", "StrictHostKeyChecking=no"
+      ]
     }
   ],
   "sources": [
     {
       "id": "dev_supervisor",
       "host": "dev-192-168-1-27",
-      "name": "dev 192.168.1.27 supervisor logs",
+      "name": "dev 192.168.1.27 supervisor logs (Go services)",
+      "path_glob": "/home/ecs-user/log/supervisord/*.log"
+    },
+    {
+      "id": "dev_go_supervisor",
+      "host": "dev-192-168-1-27",
+      "name": "dev 192.168.1.27 supervisor logs (Go services)",
+      "path_glob": "/home/ecs-user/log/supervisord/*.log"
+    },
+    {
+      "id": "dev_php_supervisor",
+      "host": "dev-192-168-1-28",
+      "name": "dev 192.168.1.28 supervisor logs (PHP task/FPM)",
       "path_glob": "/home/ecs-user/log/supervisord/*.log"
     }
   ],
