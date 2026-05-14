@@ -15,6 +15,9 @@ pipeline {
     DEPLOY_DIR = '/var/www/slp/log-mcp'
     SUPERVISOR_CONF = '/etc/supervisor/conf.d/log-mcp.conf'
     SERVICE_NAME = 'log-mcp'
+    SUDO = 'sudo -n'
+    INSTALL = '/usr/bin/install'
+    SUPERVISORCTL = '/usr/bin/supervisorctl'
   }
 
   stages {
@@ -71,15 +74,15 @@ pipeline {
     stage('Deploy') {
       steps {
         sh '''
-          sudo install -d -m 0755 "$DEPLOY_DIR"
-          sudo install -m 0755 dist/log-mcp "$DEPLOY_DIR/log-mcp"
-          sudo install -m 0644 dist/config.example.json "$DEPLOY_DIR/config.example.json"
-          sudo install -m 0640 dist/config.dev.json "$DEPLOY_DIR/config.json"
-          sudo install -m 0640 dist/config.dev.json "$DEPLOY_DIR/config.dev.json"
-          sudo install -m 0644 deploy/supervisor/log-mcp.conf "$SUPERVISOR_CONF"
-          sudo supervisorctl reread
-          sudo supervisorctl update
-          sudo supervisorctl restart "$SERVICE_NAME"
+          $SUDO $INSTALL -d -m 0755 "$DEPLOY_DIR"
+          $SUDO $INSTALL -m 0755 dist/log-mcp "$DEPLOY_DIR/log-mcp"
+          $SUDO $INSTALL -m 0644 dist/config.example.json "$DEPLOY_DIR/config.example.json"
+          $SUDO $INSTALL -m 0640 dist/config.dev.json "$DEPLOY_DIR/config.json"
+          $SUDO $INSTALL -m 0640 dist/config.dev.json "$DEPLOY_DIR/config.dev.json"
+          $SUDO $INSTALL -m 0644 deploy/supervisor/log-mcp.conf "$SUPERVISOR_CONF"
+          $SUDO $SUPERVISORCTL reread
+          $SUDO $SUPERVISORCTL update
+          $SUDO $SUPERVISORCTL restart "$SERVICE_NAME"
         '''
       }
     }

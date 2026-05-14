@@ -51,6 +51,12 @@ sudo supervisorctl update
 sudo supervisorctl restart log-mcp
 ```
 
+The Jenkins service user must have non-interactive sudo permission for the deploy commands. A sudoers template is provided at:
+
+```text
+deploy/sudoers/log-mcp-jenkins
+```
+
 ## Tools
 
 - `list_log_sources`: list configured log sources and hosts.
