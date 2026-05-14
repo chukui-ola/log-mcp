@@ -47,6 +47,12 @@
       "host": "dev-192-168-1-28",
       "name": "dev 192.168.1.28 supervisor logs (PHP task/FPM)",
       "path_glob": "/home/ecs-user/log/supervisord/*.log"
+    },
+    {
+      "id": "dev_php_fpm",
+      "host": "dev-192-168-1-28",
+      "name": "dev 192.168.1.28 PHP FPM logs",
+      "path_glob": "/var/www/slp/slp-php/cache/log/*.log"
     }
   ],
   "redact_patterns": [
